@@ -1,224 +1,290 @@
-import {
-NextRequest,
-NextResponse
-}
-from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
+import { supabase } from "@/lib/supabase/client";
 
-import {
-supabaseAdmin
-}
-from "@/lib/supabaseAdmin";
-
-
-import {
-prisma
-}
-from "@/lib/prisma";
-
+import { prisma } from "@/lib/prisma";
 
 
 
 export async function POST(
-req:NextRequest
-){
+  request: NextRequest
+) {
 
+  try {
 
-try{
 
+    const formData =
+      await request.formData();
 
-const formData =
-await req.formData();
 
 
+    const file =
+      formData.get("file") as File;
 
-const file =
-formData.get("file") as File;
 
 
+    const applicationId =
+      formData.get("applicationId") as string;
 
-const applicationId =
-formData.get(
-"applicationId"
-) as string;
 
 
+    const documentType =
+      formData.get("documentType") as string;
 
-const documentType =
-formData.get(
-"documentType"
-) as string;
 
 
 
-if(!file){
+    if (!file) {
 
-return NextResponse.json(
+      return NextResponse.json(
+        {
+          success:false,
+          message:"File is required"
+        },
+        {
+          status:400
+        }
+      );
 
-{
-message:"File required"
-},
+    }
 
-{
-status:400
-}
 
-);
 
-}
 
+    if (!applicationId) {
 
+      return NextResponse.json(
+        {
+          success:false,
+          message:"Application ID is required"
+        },
+        {
+          status:400
+        }
+      );
 
-if(!applicationId){
+    }
 
-return NextResponse.json(
 
-{
-message:"Application ID required"
-},
 
-{
-status:400
-}
 
-);
 
-}
+    /*
+      Convert File -> Buffer
+    */
 
+    const bytes =
+      await file.arrayBuffer();
 
 
 
-const bytes =
-await file.arrayBuffer();
+    const buffer =
+      Buffer.from(bytes);
 
 
 
-const buffer =
-Buffer.from(bytes);
 
 
+    /*
+      Unique filename
+    */
 
-const filePath =
 
-`${applicationId}/${Date.now()}-${file.name}`;
+    const fileName =
 
+      `${applicationId}/${Date.now()}-${file.name}`;
 
 
 
-const upload =
 
-await supabaseAdmin
 
-.storage
 
-.from(
-"loan-documents"
-)
 
-.upload(
+    /*
+      Upload to Supabase Storage
 
-filePath,
+      Bucket:
+      loan-documents
+    */
 
-buffer,
 
-{
+    const uploadResult =
 
-contentType:file.type,
+      await supabase.storage
 
-upsert:false
+      .from("loan-documents")
 
-}
+      .upload(
 
-);
+        fileName,
 
+        buffer,
 
+        {
 
+          contentType:file.type,
 
+          upsert:false
 
-if(upload.error){
+        }
 
-throw upload.error;
+      );
 
-}
 
 
 
 
-const document =
 
-await prisma.document.create({
+    if(uploadResult.error){
 
-data:{
 
+      return NextResponse.json(
+        {
 
-applicationId,
+          success:false,
 
+          message:
+          uploadResult.error.message
 
-documentType,
+        },
+        {
+          status:500
+        }
+      );
 
 
-fileName:file.name,
+    }
 
 
-fileUrl:filePath
 
 
-}
 
-});
 
 
 
+    /*
+       Generate Public URL
+    */
 
 
-return NextResponse.json(
+    const publicUrl =
 
-{
+      supabase.storage
 
-success:true,
+      .from("loan-documents")
 
-document
+      .getPublicUrl(
 
-},
+        fileName
 
-{
+      )
+      .data
+      .publicUrl;
 
-status:201
 
-}
 
-);
 
 
 
-}
 
-catch(error:any){
 
 
-console.log(error);
+    /*
+       Save document metadata
+       in PostgreSQL
 
+       Prisma Document table
+    */
 
-return NextResponse.json(
 
-{
+    const document =
 
-success:false,
+      await prisma.document.create({
 
-message:error.message
+        data:{
 
-},
 
-{
+          applicationId,
 
-status:500
 
-}
+          documentType:
+          documentType || "OTHER",
 
-);
 
+          fileName:
+          file.name,
 
-}
+
+          fileUrl:
+          publicUrl
+
+
+        }
+
+      });
+
+
+
+
+
+
+
+
+    return NextResponse.json(
+      {
+
+        success:true,
+
+        message:
+        "Document uploaded successfully",
+
+        document
+
+      },
+      {
+        status:200
+      }
+    );
+
+
+
+
+
+
+  }
+
+  catch(error:any){
+
+
+    console.error(
+      "UPLOAD ERROR:",
+      error
+    );
+
+
+
+    return NextResponse.json(
+
+      {
+
+        success:false,
+
+        message:
+        error.message ||
+        "Upload failed"
+
+      },
+
+      {
+
+        status:500
+
+      }
+
+    );
+
+
+  }
 
 
 }
