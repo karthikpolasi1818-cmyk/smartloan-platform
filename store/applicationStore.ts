@@ -8,13 +8,19 @@ import { create } from "zustand";
 interface ApplicationState {
 
 
-  // STEP
+  // ==========================
+  // APPLICATION
+  // ==========================
 
   currentStep:number;
 
+  applicationId:string;
 
 
+
+  // ==========================
   // LOAN DETAILS
+  // ==========================
 
   loanType:string;
 
@@ -28,7 +34,9 @@ interface ApplicationState {
 
 
 
+  // ==========================
   // PERSONAL DETAILS
+  // ==========================
 
   fullName:string;
 
@@ -38,7 +46,19 @@ interface ApplicationState {
 
 
 
-  // ADDRESS DETAILS
+  // ==========================
+  // IDENTITY
+  // ==========================
+
+  pan:string;
+
+  aadhaar:string;
+
+
+
+  // ==========================
+  // ADDRESS
+  // ==========================
 
   address:string;
 
@@ -48,7 +68,9 @@ interface ApplicationState {
 
 
 
-  // EMPLOYMENT DETAILS
+  // ==========================
+  // EMPLOYMENT
+  // ==========================
 
   employmentType:string;
 
@@ -58,17 +80,17 @@ interface ApplicationState {
 
 
 
+  // ==========================
   // DOCUMENTS
+  // ==========================
 
   documents:any;
 
 
 
+  // ==========================
   // VERIFICATION
-
-  pan:string;
-
-  aadhaar:string;
+  // ==========================
 
   verified:boolean;
 
@@ -76,7 +98,9 @@ interface ApplicationState {
 
 
 
-  // APPROVAL
+  // ==========================
+  // CREDIT / APPROVAL
+  // ==========================
 
   creditScore:number;
 
@@ -86,14 +110,22 @@ interface ApplicationState {
 
 
 
+  // ==========================
   // SIGNATURE
+  // ==========================
 
   signature:string;
 
 
 
-
+  // ==========================
   // ACTIONS
+  // ==========================
+
+
+  setApplicationId:
+  (id:string)=>void;
+
 
 
   setLoanType:
@@ -105,92 +137,68 @@ interface ApplicationState {
 
 
   setAmount:
-  (
-    amount:number
-  )=>void;
+  (amount:number)=>void;
 
 
 
   setTenure:
-  (
-    tenure:number
-  )=>void;
+  (tenure:number)=>void;
 
 
 
   setIncome:
-  (
-    income:number
-  )=>void;
+  (income:number)=>void;
 
 
 
   setFullName:
-  (
-    name:string
-  )=>void;
+  (name:string)=>void;
 
 
 
   setEmail:
-  (
-    email:string
-  )=>void;
+  (email:string)=>void;
 
 
 
   setPhone:
-  (
-    phone:string
-  )=>void;
+  (phone:string)=>void;
 
 
 
   setPAN:
-  (
-    pan:string
-  )=>void;
+  (pan:string)=>void;
 
 
 
   setAadhaar:
-  (
-    aadhaar:string
-  )=>void;
+  (aadhaar:string)=>void;
 
 
 
   setDocuments:
-  (
-    documents:any
-  )=>void;
+  (documents:any)=>void;
 
 
 
   setVerified:
-  (
-    value:boolean
-  )=>void;
+  (value:boolean)=>void;
 
 
 
   setVerificationStatus:
-  (
-    value:boolean
-  )=>void;
+  (value:boolean)=>void;
 
 
 
   setSignature:
-  (
-    signature:string
-  )=>void;
+  (signature:string)=>void;
 
 
 
   setApproval:
   (
-    creditScore:number,
+    score:number,
     status:string
   )=>void;
 
@@ -225,38 +233,42 @@ interface ApplicationState {
 
 
 
-export const useApplicationStore =
+export const useApplicationStore = create<ApplicationState>(
 
-create<ApplicationState>((set)=>(
-
-
+(set)=>(
 
 {
 
 
+// ==========================
 // INITIAL STATE
+// ==========================
 
 
 currentStep:1,
 
 
+applicationId:"",
 
-// LOAN
+
 
 loanType:"",
 
-loanConfig:null,
+
+loanConfig:{},
+
 
 amount:0,
 
+
 tenure:0,
+
 
 interestRate:0,
 
 
 
-
-// PERSONAL
+// Personal
 
 fullName:"",
 
@@ -266,8 +278,15 @@ phone:"",
 
 
 
+// Identity
 
-// ADDRESS
+pan:"",
+
+aadhaar:"",
+
+
+
+// Address
 
 address:"",
 
@@ -277,9 +296,7 @@ state:"",
 
 
 
-
-
-// EMPLOYMENT
+// Employment
 
 employmentType:"",
 
@@ -289,21 +306,13 @@ income:0,
 
 
 
-
-
-// DOCUMENTS
+// Documents
 
 documents:{},
 
 
 
-
-
-// VERIFICATION
-
-pan:"",
-
-aadhaar:"",
+// Verification
 
 verified:false,
 
@@ -311,9 +320,7 @@ verificationStatus:false,
 
 
 
-
-
-// APPROVAL
+// Approval
 
 creditScore:0,
 
@@ -323,9 +330,7 @@ approvalStatus:"PENDING",
 
 
 
-
-
-// SIGNATURE
+// Signature
 
 signature:"",
 
@@ -333,9 +338,21 @@ signature:"",
 
 
 
+// ==========================
+// SETTERS
+// ==========================
 
 
-// ACTIONS
+
+setApplicationId:
+
+(id)=>
+
+set({
+
+applicationId:id
+
+}),
 
 
 
@@ -349,16 +366,13 @@ set({
 
 loanType:type,
 
-loanConfig:config || null,
+loanConfig:config || {},
 
 interestRate:
 
 config?.rate || 0
 
 }),
-
-
-
 
 
 
@@ -378,9 +392,6 @@ amount
 
 
 
-
-
-
 setTenure:
 
 (tenure)=>
@@ -390,9 +401,6 @@ set({
 tenure
 
 }),
-
-
-
 
 
 
@@ -412,9 +420,6 @@ income
 
 
 
-
-
-
 setFullName:
 
 (name)=>
@@ -424,9 +429,6 @@ set({
 fullName:name
 
 }),
-
-
-
 
 
 
@@ -446,9 +448,6 @@ email
 
 
 
-
-
-
 setPhone:
 
 (phone)=>
@@ -458,9 +457,6 @@ set({
 phone
 
 }),
-
-
-
 
 
 
@@ -480,9 +476,6 @@ pan
 
 
 
-
-
-
 setAadhaar:
 
 (aadhaar)=>
@@ -492,9 +485,6 @@ set({
 aadhaar
 
 }),
-
-
-
 
 
 
@@ -514,9 +504,6 @@ documents
 
 
 
-
-
-
 setVerified:
 
 (value)=>
@@ -526,9 +513,6 @@ set({
 verified:value
 
 }),
-
-
-
 
 
 
@@ -548,9 +532,6 @@ verificationStatus:value
 
 
 
-
-
-
 setSignature:
 
 (signature)=>
@@ -565,16 +546,13 @@ signature
 
 
 
-
-
-
 setApproval:
 
-(creditScore,status)=>
+(score,status)=>
 
 set({
 
-creditScore,
+creditScore:score,
 
 approvalStatus:status
 
@@ -584,8 +562,9 @@ approvalStatus:status
 
 
 
-
-
+// ==========================
+// STEPS
+// ==========================
 
 
 nextStep:
@@ -608,10 +587,6 @@ state.currentStep + 1
 )
 
 ),
-
-
-
-
 
 
 
@@ -648,8 +623,9 @@ state.currentStep - 1
 
 
 
-
-
+// ==========================
+// UPDATE
+// ==========================
 
 
 update:
@@ -676,6 +652,9 @@ set(
 
 
 
+// ==========================
+// RESET
+// ==========================
 
 
 resetApplication:
@@ -685,14 +664,15 @@ resetApplication:
 
 set({
 
-
 currentStep:1,
+
+
+applicationId:"",
 
 
 loanType:"",
 
-loanConfig:null,
-
+loanConfig:{},
 
 amount:0,
 
@@ -707,6 +687,12 @@ fullName:"",
 email:"",
 
 phone:"",
+
+
+
+pan:"",
+
+aadhaar:"",
 
 
 
@@ -730,10 +716,6 @@ documents:{},
 
 
 
-pan:"",
-
-aadhaar:"",
-
 verified:false,
 
 verificationStatus:false,
@@ -750,15 +732,11 @@ approvalStatus:"PENDING",
 
 signature:""
 
-
-
 })
-
-
-
 
 
 }
 
+)
 
-));
+);

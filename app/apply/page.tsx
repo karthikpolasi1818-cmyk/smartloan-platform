@@ -2,31 +2,33 @@
 
 
 import {
-  useApplicationStore
-} from "@/store/applicationStore";
+
+useApplicationStore
+
+}
+
+from "@/store/applicationStore";
 
 
+import PersonalLoanForm
 
-import LoanSelector from "@/components/loan/LoanSelector";
-
-import LoanStepper from "@/components/loan/LoanStepper";
-
-
-import PersonalLoanForm from "@/components/forms/PersonalLoanForm";
-
-import AddressEmploymentForm from "@/components/forms/AddressEmploymentForm";
-
-import DocumentUploadForm from "@/components/forms/DocumentUploadForm";
-
-import LoanDetailsForm from "@/components/forms/LoanDetailsForm";
+from "@/components/forms/PersonalLoanForm";
 
 
-import LoanAgreement from "@/components/signature/LoanAgreement";
+import AddressEmploymentForm
 
-import SignatureCapture from "@/components/signature/SignatureCapture";
+from "@/components/forms/AddressEmploymentForm";
 
 
-import SubmitApplication from "@/components/submit/SubmitApplication";
+import LoanDetailsForm
+
+from "@/components/forms/LoanDetailsForm";
+
+
+import DocumentUpload
+
+from "@/components/documents/DocumentUpload";
+
 
 
 
@@ -35,10 +37,13 @@ export default function ApplyPage(){
 
 
 
-const step =
-useApplicationStore(
-(state)=>state.currentStep
-);
+const {
+
+currentStep,
+
+applicationId
+
+}=useApplicationStore();
 
 
 
@@ -46,36 +51,40 @@ useApplicationStore(
 
 return (
 
-
 <main
+
 className="
 min-h-screen
 bg-gradient-to-br
 from-blue-50
-via-white
 to-indigo-100
 py-10
-px-5
 "
+
 >
 
 
 <div
+
 className="
-max-w-6xl
+max-w-5xl
 mx-auto
+px-5
 "
+
 >
 
 
 
 <h1
+
 className="
-text-5xl
-font-extrabold
-text-blue-950
-mb-3
+text-4xl
+font-bold
+text-center
+text-blue-900
 "
+
 >
 
 SmartLoan Application
@@ -84,15 +93,18 @@ SmartLoan Application
 
 
 
+
 <p
+
 className="
-text-lg
+text-center
 text-gray-600
-mb-10
+mt-3
 "
+
 >
 
-Production Grade Digital Loan Application System
+Complete your loan application step by step
 
 </p>
 
@@ -100,102 +112,104 @@ Production Grade Digital Loan Application System
 
 
 
-<LoanSelector />
 
 
+{/* Progress */}
 
-<LoanStepper />
+<div
 
-
-
-
-
-
-{
-step===1 &&
-
-<PersonalLoanForm />
-
-}
-
-
-
-
-
-{
-step===2 &&
-
-<AddressEmploymentForm />
-
-}
-
-
-
-
-
-{
-step===3 &&
-
-<DocumentUploadForm />
-
-}
-
-
-
-
-
-{
-step===4 &&
-
-<LoanDetailsForm />
-
-}
-
-
-
-
-
-{
-step===5 &&
-
-<div className="loan-card">
-
-
-<h2 className="section-title">
-
-Verification
-
-</h2>
-
-
-<p>
-
-Identity and document verification completed.
-
-</p>
-
-
-<button
-
-className="primary-btn"
-
-onClick={()=>{
-
-useApplicationStore
-.getState()
-.nextStep();
-
-}}
+className="
+flex
+justify-center
+gap-4
+mt-10
+"
 
 >
 
-Continue
 
-</button>
+{
+
+[1,2,3,4].map(
+
+(step)=>(
+
+
+<div
+
+key={step}
+
+className={`
+
+w-12
+
+h-12
+
+rounded-full
+
+flex
+
+items-center
+
+justify-center
+
+font-bold
+
+${
+
+currentStep >= step
+
+?
+
+"bg-blue-600 text-white"
+
+:
+
+"bg-gray-200 text-gray-600"
+
+}
+
+`}
+
+>
+
+{step}
+
+</div>
+
+
+)
+
+)
+
+}
+
 
 
 </div>
 
+
+
+
+
+
+
+<div
+
+className="
+mt-10
+"
+
+>
+
+
+
+{
+
+currentStep===1 &&
+
+<LoanDetailsForm/>
+
 }
 
 
@@ -203,20 +217,10 @@ Continue
 
 
 {
-step===6 &&
 
-<LoanAgreement />
+currentStep===2 &&
 
-}
-
-
-
-
-
-{
-step===7 &&
-
-<SignatureCapture />
+<PersonalLoanForm/>
 
 }
 
@@ -225,11 +229,42 @@ step===7 &&
 
 
 {
-step===8 &&
 
-<SubmitApplication />
+currentStep===3 &&
+
+<AddressEmploymentForm/>
 
 }
+
+
+
+
+
+{
+
+currentStep===4 &&
+
+
+<DocumentUpload
+
+applicationId={
+
+applicationId ||
+
+""
+
+}
+
+/>
+
+
+}
+
+
+
+
+
+</div>
 
 
 
@@ -242,6 +277,5 @@ step===8 &&
 
 
 );
-
 
 }

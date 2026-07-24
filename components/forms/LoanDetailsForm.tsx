@@ -2,8 +2,75 @@
 
 
 import {
+
+useForm
+
+}
+
+from "react-hook-form";
+
+
+import {
+
 useApplicationStore
-} from "@/store/applicationStore";
+
+}
+
+from "@/store/applicationStore";
+
+
+
+
+
+interface LoanFormData {
+
+loanType:string;
+
+amount:number;
+
+tenure:number;
+
+}
+
+
+
+
+
+const loanOptions = {
+
+
+PERSONAL:{
+
+rate:10.5,
+
+maxAmount:500000
+
+},
+
+
+HOME:{
+
+rate:8.5,
+
+maxAmount:5000000
+
+},
+
+
+BUSINESS:{
+
+rate:12,
+
+maxAmount:2000000
+
+}
+
+
+};
+
+
+
+
 
 
 
@@ -13,75 +80,85 @@ export default function LoanDetailsForm(){
 
 const {
 
-
-loanType,
-
-loanConfig,
-
-amount,
-
-tenure,
-
-income,
+setLoanType,
 
 setAmount,
 
 setTenure,
 
-setIncome,
-
 nextStep
 
+}
 
-}=useApplicationStore();
+=
 
-
-
-
-
+useApplicationStore();
 
 
-const emi =
-
-amount && tenure && loanConfig.rate
-
-?
 
 
-Math.round(
 
-(
+const {
 
-amount *
+register,
 
-(loanConfig.rate/12/100)
+handleSubmit
 
-*
+}
 
-Math.pow(
-1+(loanConfig.rate/12/100),
-tenure*12
-)
+=
 
-)
+useForm<LoanFormData>();
 
-/
 
-(
 
-Math.pow(
-1+(loanConfig.rate/12/100),
-tenure*12
-)-1
 
-)
 
-)
 
-:
 
-0;
+function submit(data:LoanFormData){
 
+
+
+const config =
+
+loanOptions[
+data.loanType as keyof typeof loanOptions
+];
+
+
+
+setLoanType(
+
+data.loanType,
+
+config
+
+);
+
+
+
+setAmount(
+
+Number(data.amount)
+
+);
+
+
+
+setTenure(
+
+Number(data.tenure)
+
+);
+
+
+
+nextStep();
+
+
+
+}
 
 
 
@@ -91,11 +168,29 @@ tenure*12
 return(
 
 
-<div className="loan-card">
+<form
+
+onSubmit={
+handleSubmit(submit)
+}
+
+className="
+bg-white
+rounded-3xl
+shadow-xl
+p-10
+space-y-6
+"
+
+>
 
 
 
-<h2 className="section-title">
+<h2 className="
+text-3xl
+font-bold
+text-blue-900
+">
 
 Loan Details
 
@@ -104,232 +199,97 @@ Loan Details
 
 
 
-<p className="subtitle">
 
-{loanType} Loan Configuration
+<select
 
-</p>
+className="input"
 
-
-
-
-
-
-
-<div className="summary-box">
-
-
-<p>
-
-Interest Rate:
-
-<strong>
-
-{loanConfig.rate}%
-
-</strong>
-
-</p>
-
-
-
-
-<p>
-
-Maximum Amount:
-
-<strong>
-
-₹
-
-{loanConfig.maxAmount.toLocaleString(
-"en-IN"
+{...register(
+"loanType",
+{
+required:true
+}
 )}
 
-</strong>
-
-</p>
+>
 
 
+<option value="">
 
-<p>
+Select Loan Type
 
-Maximum Tenure:
-
-<strong>
-
-{loanConfig.maxTenure} Years
-
-</strong>
-
-</p>
+</option>
 
 
+<option value="PERSONAL">
 
-</div>
+Personal Loan
 
-
-
-
-
+</option>
 
 
-<div className="form-group">
+<option value="HOME">
+
+Home Loan
+
+</option>
 
 
-<label>
+<option value="BUSINESS">
 
-Loan Amount
+Business Loan
 
-</label>
+</option>
+
+
+</select>
+
+
+
+
+
 
 
 
 <input
 
+className="input"
 
 type="number"
 
+placeholder="Loan Amount"
 
-value={amount}
-
-
-min={loanConfig.minAmount}
-
-
-max={loanConfig.maxAmount}
-
-
-
-onChange={(e)=>
-
-setAmount(
-Number(e.target.value)
-)
-
+{...register(
+"amount",
+{
+valueAsNumber:true
 }
-
-
-
-/>
-
-
-
-</div>
-
-
-
-
-
-
-
-
-<div className="form-group">
-
-
-<label>
-
-Tenure (Years)
-
-</label>
-
-
-
-<input
-
-
-type="number"
-
-
-value={tenure}
-
-
-min="1"
-
-
-max={loanConfig.maxTenure}
-
-
-
-onChange={(e)=>
-
-setTenure(
-Number(e.target.value)
-)
-
-}
-
-
-
-/>
-
-
-</div>
-
-
-
-
-
-
-
-<div className="form-group">
-
-
-<label>
-
-Monthly Income
-
-</label>
-
-
-<input
-
-
-type="number"
-
-
-value={income}
-
-
-onChange={(e)=>
-
-setIncome(
-Number(e.target.value)
-)
-
-}
-
-
-
-/>
-
-
-</div>
-
-
-
-
-
-
-
-
-<div className="success-box">
-
-
-Estimated EMI:
-
-<strong>
-
-₹
-
-{emi.toLocaleString(
-"en-IN"
 )}
 
-</strong>
+/>
 
 
-</div>
+
+
+
+
+
+<input
+
+className="input"
+
+type="number"
+
+placeholder="Tenure (Years)"
+
+{...register(
+"tenure",
+{
+valueAsNumber:true
+}
+)}
+
+/>
 
 
 
@@ -339,28 +299,26 @@ Estimated EMI:
 
 <button
 
-
-className="primary-btn"
-
-
-onClick={nextStep}
-
+className="
+bg-blue-600
+text-white
+px-10
+py-4
+rounded-xl
+font-bold
+"
 
 >
 
-Continue Verification
+Continue
 
 </button>
 
 
 
+</form>
 
 
-
-</div>
-
-
-);
-
+)
 
 }
