@@ -122,3 +122,5 @@ public/uploads/
 
 .vscode/
 .idea/
+.vercel/
+.env*
