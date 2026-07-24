@@ -15,6 +15,7 @@
     "@hookform/resolvers": "^5.4.0",
     "@prisma/adapter-pg": "^7.9.0",
     "@prisma/client": "^7.9.0",
+    "@supabase/supabase-js": "^2.109.0",
     "bcrypt": "^6.0.0",
     "browser-image-compression": "^2.0.2",
     "framer-motion": "^12.42.2",
