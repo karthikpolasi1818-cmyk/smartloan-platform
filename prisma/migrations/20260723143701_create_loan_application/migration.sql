@@ -1,0 +1,30 @@
+-- CreateTable
+CREATE TABLE "LoanApplication" (
+    "id" TEXT NOT NULL,
+    "loanType" TEXT NOT NULL,
+    "fullName" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "phone" TEXT NOT NULL,
+    "pan" TEXT NOT NULL,
+    "aadhaar" TEXT NOT NULL,
+    "address" TEXT,
+    "city" TEXT,
+    "state" TEXT,
+    "employmentType" TEXT,
+    "companyName" TEXT,
+    "monthlyIncome" DOUBLE PRECISION,
+    "loanAmount" DOUBLE PRECISION NOT NULL,
+    "tenure" INTEGER NOT NULL,
+    "interestRate" DOUBLE PRECISION NOT NULL,
+    "documents" JSONB,
+    "verified" BOOLEAN NOT NULL DEFAULT false,
+    "creditScore" INTEGER,
+    "riskScore" INTEGER,
+    "approvalStatus" TEXT,
+    "signature" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'DRAFT',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "LoanApplication_pkey" PRIMARY KEY ("id")
+);
