@@ -1,43 +1,124 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# ===============================
+# Dependencies
+# ===============================
 
-# dependencies
-/node_modules
-/.pnp
+node_modules/
+.pnp
 .pnp.*
 .yarn/*
+
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
 
-# next.js
-/.next/
-/out/
 
-# production
-/build
+# ===============================
+# Next.js
+# ===============================
 
-# misc
-.DS_Store
-*.pem
+.next/
+out/
 
-# debug
+
+
+# ===============================
+# Production builds
+# ===============================
+
+build/
+
+
+
+# ===============================
+# Environment Variables
+# IMPORTANT: Never commit secrets
+# ===============================
+
+.env
+.env.local
+.env.development
+.env.production
+.env.*.local
+
+
+
+# ===============================
+# Debug Logs
+# ===============================
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
+pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
 
-# vercel
-.vercel
 
-# typescript
+# ===============================
+# Testing
+# ===============================
+
+coverage/
+
+
+
+# ===============================
+# TypeScript
+# ===============================
+
 *.tsbuildinfo
 next-env.d.ts
 
-/app/generated/prisma
+
+
+# ===============================
+# OS Files
+# ===============================
+
+.DS_Store
+Thumbs.db
+
+
+
+# ===============================
+# Certificates / Keys
+# ===============================
+
+*.pem
+*.key
+
+
+
+# ===============================
+# Vercel
+# ===============================
+
+.vercel/
+
+
+
+# ===============================
+# Prisma Generated Files
+# ===============================
+
+app/generated/prisma
+lib/generated/prisma
+
+
+
+# ===============================
+# Uploads / Local Storage
+# ===============================
+
+uploads/
+public/uploads/
+
+
+
+# ===============================
+# IDE Files
+# ===============================
+
+.vscode/
+.idea/
