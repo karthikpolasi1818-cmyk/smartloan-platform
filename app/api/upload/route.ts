@@ -2,289 +2,264 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { supabase } from "@/lib/supabase/client";
 
-import { prisma } from "@/lib/prisma";
+
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+
+const allowedTypes = [
+
+"image/jpeg",
+
+"image/png",
+
+"application/pdf"
+
+];
+
+
 
 
 
 export async function POST(
-  request: NextRequest
-) {
 
-  try {
+request:NextRequest
 
+){
 
-    const formData =
-      await request.formData();
 
+try{
 
 
-    const file =
-      formData.get("file") as File;
+const formData = await request.formData();
 
 
 
-    const applicationId =
-      formData.get("applicationId") as string;
+const file =
 
+formData.get("file") as File;
 
 
-    const documentType =
-      formData.get("documentType") as string;
 
 
+if(!file){
 
 
-    if (!file) {
+return NextResponse.json(
 
-      return NextResponse.json(
-        {
-          success:false,
-          message:"File is required"
-        },
-        {
-          status:400
-        }
-      );
+{
 
-    }
+success:false,
 
+message:"No file uploaded"
 
+},
 
+{
+status:400
+}
 
-    if (!applicationId) {
+);
 
-      return NextResponse.json(
-        {
-          success:false,
-          message:"Application ID is required"
-        },
-        {
-          status:400
-        }
-      );
 
-    }
+}
 
 
 
 
 
-    /*
-      Convert File -> Buffer
-    */
 
-    const bytes =
-      await file.arrayBuffer();
+// FILE SIZE CHECK
 
+if(file.size > MAX_FILE_SIZE){
 
 
-    const buffer =
-      Buffer.from(bytes);
+return NextResponse.json(
 
+{
 
+success:false,
 
+message:"File size must be below 5MB"
 
+},
 
-    /*
-      Unique filename
-    */
+{
+status:400
+}
 
+);
 
-    const fileName =
 
-      `${applicationId}/${Date.now()}-${file.name}`;
+}
 
 
 
 
 
 
+// FILE TYPE CHECK
 
-    /*
-      Upload to Supabase Storage
+if(!allowedTypes.includes(file.type)){
 
-      Bucket:
-      loan-documents
-    */
 
+return NextResponse.json(
 
-    const uploadResult =
+{
 
-      await supabase.storage
+success:false,
 
-      .from("loan-documents")
+message:"Only PDF, JPG and PNG files allowed"
 
-      .upload(
+},
 
-        fileName,
+{
+status:400
+}
 
-        buffer,
+);
 
-        {
 
-          contentType:file.type,
+}
 
-          upsert:false
 
-        }
 
-      );
 
 
 
+const bytes =
 
+await file.arrayBuffer();
 
 
-    if(uploadResult.error){
 
+const buffer =
 
-      return NextResponse.json(
-        {
+Buffer.from(bytes);
 
-          success:false,
 
-          message:
-          uploadResult.error.message
 
-        },
-        {
-          status:500
-        }
-      );
 
 
-    }
+const fileName =
 
+`${Date.now()}-${file.name}`;
 
 
 
 
 
 
+const {error} =
 
-    /*
-       Generate Public URL
-    */
+await supabase.storage
 
+.from("documents")
 
-    const publicUrl =
+.upload(
 
-      supabase.storage
+fileName,
 
-      .from("loan-documents")
+buffer,
 
-      .getPublicUrl(
+{
 
-        fileName
+contentType:file.type
 
-      )
-      .data
-      .publicUrl;
+}
 
+);
 
 
 
 
 
 
+if(error){
 
 
-    /*
-       Save document metadata
-       in PostgreSQL
+return NextResponse.json(
 
-       Prisma Document table
-    */
+{
 
+success:false,
 
-    const document =
+message:"Upload failed"
 
-      await prisma.document.create({
+},
 
-        data:{
+{
+status:500
+}
 
+);
 
-          applicationId,
 
+}
 
-          documentType:
-          documentType || "OTHER",
 
 
-          fileName:
-          file.name,
 
 
-          fileUrl:
-          publicUrl
 
+const {
 
-        }
+data
 
-      });
+}=
 
+supabase.storage
 
+.from("documents")
 
+.getPublicUrl(fileName);
 
 
 
 
 
-    return NextResponse.json(
-      {
 
-        success:true,
+return NextResponse.json(
 
-        message:
-        "Document uploaded successfully",
+{
 
-        document
+success:true,
 
-      },
-      {
-        status:200
-      }
-    );
+url:data.publicUrl
 
+}
 
+);
 
 
 
+}
 
-  }
+catch(error){
 
-  catch(error:any){
 
+console.error(error);
 
-    console.error(
-      "UPLOAD ERROR:",
-      error
-    );
 
 
+return NextResponse.json(
 
-    return NextResponse.json(
+{
 
-      {
+success:false,
 
-        success:false,
+message:"Upload error"
 
-        message:
-        error.message ||
-        "Upload failed"
+},
 
-      },
+{
+status:500
+}
 
-      {
+);
 
-        status:500
 
-      }
-
-    );
-
-
-  }
+}
 
 
 }

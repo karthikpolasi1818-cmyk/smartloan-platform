@@ -1,18 +1,21 @@
 "use client";
 
 
-import {
-  useEffect,
-  useState
-} from "react";
+import { useEffect, useState } from "react";
+
+import { motion } from "framer-motion";
 
 
-import {
-  useRouter
-} from "next/navigation";
+import LogoutButton 
+from "@/components/auth/LogoutButton";
 
 
-import AnalyticsDashboard from "@/components/analytics/AnalyticsDashboard";
+import StatusActions 
+from "@/components/admin/StatusActions";
+
+
+import DocumentViewer 
+from "@/components/admin/DocumentViewer";
 
 
 
@@ -22,28 +25,16 @@ export default function AdminPage(){
 
 
 
-const router = useRouter();
+const [applications,setApplications] = 
+useState<any[]>([]);
 
 
-
-const [
-
-applications,
-
-setApplications
-
-] = useState<any[]>([]);
+const [documents,setDocuments] = 
+useState<any[]>([]);
 
 
-
-const [
-
-loading,
-
-setLoading
-
-] = useState(true);
-
+const [loading,setLoading] = 
+useState(true);
 
 
 
@@ -56,31 +47,30 @@ async function loadApplications(){
 try{
 
 
-setLoading(true);
+const response = await fetch(
 
-
-
-const response =
-
-await fetch(
-
-"/api/admin"
+"/api/admin/applications"
 
 );
 
 
 
-const data =
+const data = await response.json();
 
-await response.json();
 
+
+
+if(data.success){
 
 
 setApplications(
 
-data.data || []
+data.applications || []
 
 );
+
+
+}
 
 
 
@@ -89,24 +79,106 @@ data.data || []
 catch(error){
 
 
-console.log(
+console.error(
+
+"APPLICATION ERROR",
+
 error
+
 );
 
 
 }
 
-finally{
+
+}
+
+
+
+
+
+
+
+
+async function loadDocuments(){
+
+
+try{
+
+
+const response = await fetch(
+
+"/api/admin/documents"
+
+);
+
+
+
+const data = await response.json();
+
+
+
+
+if(data.success){
+
+
+setDocuments(
+
+data.documents || []
+
+);
+
+
+}
+
+
+
+}
+
+catch(error){
+
+
+console.error(
+
+"DOCUMENT ERROR",
+
+error
+
+);
+
+
+}
+
+
+}
+
+
+
+
+
+
+
+async function refreshData(){
+
+
+setLoading(true);
+
+
+
+await Promise.all([
+
+loadApplications(),
+
+loadDocuments()
+
+]);
+
 
 
 setLoading(false);
 
 
 }
-
-
-}
-
 
 
 
@@ -116,7 +188,7 @@ setLoading(false);
 useEffect(()=>{
 
 
-loadApplications();
+refreshData();
 
 
 },[]);
@@ -128,186 +200,247 @@ loadApplications();
 
 
 
-async function updateStatus(
 
-id:string,
+const total = applications.length;
 
-status:string
 
-){
 
+const pending = applications.filter(
 
+(app)=>
 
-const remark =
+app.approvalStatus==="PENDING"
 
-window.prompt(
+).length;
 
-"Enter admin remark"
 
-);
 
 
+const approved = applications.filter(
 
+(app)=>
 
-if(!remark){
+app.approvalStatus==="APPROVED"
 
-return;
+).length;
 
-}
 
 
 
+const rejected = applications.filter(
 
-await fetch(
+(app)=>
 
-"/api/admin/status",
+app.approvalStatus==="REJECTED"
 
-{
+).length;
 
 
-method:"PUT",
 
 
-headers:{
 
-"Content-Type":
 
-"application/json"
 
-},
 
+return (
 
-body:JSON.stringify({
-
-id,
-
-status,
-
-remark
-
-})
-
-
-}
-
-);
-
-
-
-
-loadApplications();
-
-
-}
-
-
-
-
-
-
-
-
-function logout(){
-
-
-
-document.cookie =
-
-"token=; path=/; max-age=0";
-
-
-
-document.cookie =
-
-"role=; path=/; max-age=0";
-
-
-
-router.push("/login");
-
-
-}
-
-
-
-
-
-
-
-
-
-return(
-
-
-
-<main
-
-className="
-
+<main className="
 min-h-screen
-
-bg-gradient-to-br
-
-from-blue-50
-
-via-white
-
-to-indigo-100
-
-p-10
-
-"
-
->
+bg-gray-100
+p-6
+md:p-10
+">
 
 
-
-<div
-
-className="max-w-7xl mx-auto"
-
->
+<div className="
+max-w-7xl
+mx-auto
+">
 
 
 
 
 
-<div className="flex justify-between items-center mb-8">
+
+{/* HEADER */}
 
 
+<div className="
+flex
+justify-between
+items-center
+mb-8
+">
 
-<h1
 
-className="
+<div>
 
+
+<h1 className="
 text-4xl
+font-bold
+">
 
-font-extrabold
-
-text-blue-900
-
-"
-
->
-
-SmartLoan Admin Dashboard
+Admin Dashboard
 
 </h1>
 
 
+<p className="
+text-gray-500
+mt-2
+">
+
+Manage loan applications and documents
+
+</p>
 
 
-<button
+</div>
 
-className="primary-btn"
 
-onClick={logout}
+
+<LogoutButton />
+
+
+</div>
+
+
+
+
+
+
+
+
+{/* ANALYTICS */}
+
+
+<div className="
+grid
+md:grid-cols-4
+gap-6
+mb-8
+">
+
+
+
+{
+
+[
+
+{
+
+title:"Total Applications",
+
+value:total,
+
+color:"text-blue-600"
+
+},
+
+{
+
+title:"Pending",
+
+value:pending,
+
+color:"text-yellow-600"
+
+},
+
+{
+
+title:"Approved",
+
+value:approved,
+
+color:"text-green-600"
+
+},
+
+{
+
+title:"Rejected",
+
+value:rejected,
+
+color:"text-red-600"
+
+}
+
+].map((card,index)=>(
+
+
+<motion.div
+
+key={card.title}
+
+initial={{
+
+opacity:0,
+
+y:20
+
+}}
+
+animate={{
+
+opacity:1,
+
+y:0
+
+}}
+
+transition={{
+
+delay:index*0.1
+
+}}
+
+className="
+bg-white
+rounded-xl
+shadow
+p-6
+"
 
 >
 
-Logout
 
-</button>
+<p className="
+text-gray-500
+">
+
+{card.title}
+
+</p>
+
+
+<h2 className={`
+
+text-3xl
+
+font-bold
+
+mt-2
+
+${card.color}
+
+`}>
+
+{card.value}
+
+</h2>
+
+
+</motion.div>
+
+
+
+))
+
+
+}
 
 
 
@@ -320,36 +453,31 @@ Logout
 
 
 
-{/* Analytics Section */}
+
+{/* APPLICATIONS */}
 
 
-
-<AnalyticsDashboard />
-
-
-
-
-
-
-
+<div className="
+bg-white
+rounded-xl
+shadow
+p-6
+mb-8
+">
 
 
-{/* Loan Applications */}
+<div className="
+flex
+justify-between
+items-center
+mb-5
+">
 
 
-
-<div
-
-className="loan-card mt-10 overflow-x-auto"
-
->
-
-
-<h2
-
-className="section-title"
-
->
+<h2 className="
+text-2xl
+font-bold
+">
 
 Loan Applications
 
@@ -357,368 +485,224 @@ Loan Applications
 
 
 
+<button
+
+onClick={refreshData}
+
+className="
+bg-blue-600
+text-white
+px-4
+py-2
+rounded-lg
+"
+
+>
+
+Refresh
+
+</button>
+
+
+
+</div>
+
+
 
 
 
 
 {
 
-loading ?
+loading
 
+?
 
-<p>
+(
 
-Loading applications...
+<p className="
+text-center
+py-10
+">
 
-</p>
-
-
-
-:
-
-
-
-applications.length===0 ?
-
-
-<p>
-
-No applications found.
+Loading...
 
 </p>
-
-
-
-:
-
-
-
-<table
-
-className="w-full border-collapse"
-
->
-
-
-
-<thead>
-
-
-<tr
-
-className="border-b"
-
->
-
-
-<th className="p-3 text-left">
-
-Applicant
-
-</th>
-
-
-
-<th className="p-3 text-left">
-
-Loan Type
-
-</th>
-
-
-
-<th className="p-3 text-left">
-
-Amount
-
-</th>
-
-
-
-<th className="p-3 text-left">
-
-Credit Score
-
-</th>
-
-
-
-<th className="p-3 text-left">
-
-Status
-
-</th>
-
-
-
-<th className="p-3 text-left">
-
-Actions
-
-</th>
-
-
-</tr>
-
-
-</thead>
-
-
-
-
-
-
-
-
-<tbody>
-
-
-
-{
-
-applications.map(
-
-(loan)=>(
-
-
-<tr
-
-key={loan.id}
-
-className="border-b"
-
->
-
-
-
-<td className="p-3">
-
-
-<p className="font-bold">
-
-{loan.fullName}
-
-</p>
-
-
-<p className="text-sm text-gray-500">
-
-{loan.email}
-
-</p>
-
-
-</td>
-
-
-
-
-
-
-
-<td className="p-3">
-
-{loan.loanType}
-
-</td>
-
-
-
-
-
-
-
-<td className="p-3">
-
-₹
-
-{
-
-loan.loanAmount?.toLocaleString(
-
-"en-IN"
 
 )
 
-}
 
-</td>
-
+:
 
 
+applications.length===0
+
+
+?
+
+
+(
+
+<p className="
+text-center
+text-gray-500
+py-10
+">
+
+No applications found
+
+</p>
+
+)
 
 
 
+:
 
-<td className="p-3">
+
+(
+
+<div className="
+space-y-5
+">
+
 
 {
 
-loan.creditScore || "-"
-
-}
-
-</td>
+applications.map((app)=>(
 
 
+<motion.div
 
 
+key={app.id}
 
 
+initial={{
 
-<td className="p-3">
+opacity:0
+
+}}
 
 
-<span
+animate={{
 
-className={
+opacity:1
 
-loan.status==="APPROVED"
+}}
 
-?
 
-"success-box"
-
-:
-
-loan.status==="REJECTED"
-
-?
-
-"error-box"
-
-:
-
-""
-
-}
+className="
+border
+rounded-xl
+p-5
+"
 
 >
 
 
-{loan.status}
+<div className="
+flex
+flex-col
+md:flex-row
+justify-between
+gap-5
+">
 
+
+
+
+
+<div>
+
+
+<h3 className="
+text-xl
+font-bold
+">
+
+{app.fullName}
+
+</h3>
+
+
+
+<p className="
+text-gray-500
+">
+
+{app.email}
+
+</p>
+
+
+
+<p className="mt-2">
+
+Loan Type:
+
+<b>
+
+{app.loanType}
+
+</b>
+
+</p>
+
+
+
+
+<p>
+
+Amount:
+
+<b>
+
+₹{app.loanAmount?.toLocaleString()}
+
+</b>
+
+</p>
+
+
+
+</div>
+
+
+
+
+
+
+
+<div className="
+space-y-3
+">
+
+
+<span className="
+inline-block
+bg-yellow-100
+text-yellow-700
+px-3
+py-1
+rounded-full
+">
+
+{app.approvalStatus}
 
 </span>
 
 
-</td>
 
 
 
+<StatusActions
 
+applicationId={app.id}
 
+refresh={refreshData}
 
-
-
-<td className="p-3 space-x-2">
-
-
-
-
-
-<button
-
-className="primary-btn"
-
-disabled={
-
-loan.status==="APPROVED"
-
-}
-
-onClick={()=>
-
-
-updateStatus(
-
-loan.id,
-
-"APPROVED"
-
-)
-
-
-}
-
->
-
-Approve
-
-</button>
-
-
-
-
-
-
-
-<button
-
-className="primary-btn"
-
-disabled={
-
-loan.status==="REJECTED"
-
-}
-
-onClick={()=>
-
-
-updateStatus(
-
-loan.id,
-
-"REJECTED"
-
-)
-
-
-}
-
->
-
-Reject
-
-</button>
-
-
-
-
-
-</td>
-
-
-
-
-
-
-</tr>
-
-
-)
-
-)
-
-
-}
-
-
-
-</tbody>
-
-
-
-
-
-</table>
-
-
-
-}
-
-
+/>
 
 
 
@@ -732,6 +716,55 @@ Reject
 
 </div>
 
+
+</motion.div>
+
+
+
+))
+
+
+}
+
+
+</div>
+
+
+)
+
+
+}
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+{/* DOCUMENTS */}
+
+
+
+<DocumentViewer
+
+documents={documents}
+
+/>
+
+
+
+
+
+
+
+
+</div>
 
 
 </main>

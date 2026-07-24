@@ -1,177 +1,127 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../lib/generated/prisma"
 }
-
 
 datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  CUSTOMER
 
+  ADMIN
 
-model User {
-
-  id           String            @id @default(uuid())
-
-  name         String
-
-  email        String            @unique
-
-  password     String
-
-  role         String            @default("CUSTOMER")
-
-  createdAt    DateTime          @default(now())
-
-  updatedAt    DateTime          @updatedAt
-
-  applications LoanApplication[]
-
-
-  @@index([email])
-
+  LOAN_MANAGER
 }
 
+model User {
+  id String @id @default(uuid())
 
+  name String
 
+  email String @unique
 
+  password String
 
+  role Role @default(CUSTOMER)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  applications LoanApplication[]
+}
 
 model LoanApplication {
+  id String @id @default(uuid())
 
-  id             String              @id @default(uuid())
+  loanType String
 
-  applicationId  String              @unique @default(uuid())
+  fullName String
 
-  loanType       String
+  email String
 
-  fullName       String
+  phone String
 
-  email          String
+  pan String
 
-  phone          String
+  aadhaar String
 
-  pan            String
+  address String?
 
-  aadhaar        String
+  city String?
 
-  address        String?
-
-  city           String?
-
-  state          String?
+  state String?
 
   employmentType String?
 
-  companyName    String?
+  companyName String?
 
-  monthlyIncome  Float?
+  monthlyIncome Float?
 
-  loanAmount     Float
+  loanAmount Float
 
-  tenure         Int
+  tenure Int
 
-  interestRate   Float
+  interestRate Float
 
-  verified       Boolean             @default(false)
+  verified Boolean @default(false)
 
-  creditScore    Int?
+  creditScore Int?
 
-  riskScore      Int?
+  riskScore Int?
 
-  approvalStatus String              @default("PENDING")
+  approvalStatus String @default("PENDING")
 
-  status         String              @default("SUBMITTED")
+  signature String?
 
-  signature      String?
+  status String @default("SUBMITTED")
 
-  adminRemark    String?
+  createdAt DateTime @default(now())
 
-  userId         String
+  updatedAt DateTime @updatedAt
 
+  adminRemark String?
 
-  createdAt      DateTime            @default(now())
+  applicationId String @unique
 
-  updatedAt      DateTime            @updatedAt
+  userId String
 
+  documents Document[]
 
+  history LoanStatusHistory[]
 
-  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-
-  documents      Document[]
-
-  history        LoanStatusHistory[]
-
-
-
-  @@index([userId])
-
-  @@index([email])
-
-  @@index([approvalStatus])
-
-  @@index([status])
-
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
-
-
-
-
-
-
-
 
 model Document {
+  id String @id @default(uuid())
 
-  id             String          @id @default(uuid())
+  applicationId String
 
-  applicationId  String
+  documentType String
 
-  documentType   String
+  fileName String
 
-  fileName       String
+  fileUrl String
 
-  fileUrl        String
+  status String @default("PENDING")
 
-  status         String          @default("PENDING")
+  uploadedAt DateTime @default(now())
 
-  uploadedAt     DateTime        @default(now())
-
-
-  application    LoanApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-
-
-
-  @@index([applicationId])
-
+  application LoanApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 }
 
-
-
-
-
-
-
-
 model LoanStatusHistory {
+  id String @id @default(uuid())
 
-  id             String          @id @default(uuid())
+  applicationId String
 
-  applicationId  String
+  status String
 
-  status         String
+  remark String?
 
-  remark         String?
+  createdAt DateTime @default(now())
 
-  createdAt      DateTime        @default(now())
-
-
-  application    LoanApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-
-
-
-  @@index([applicationId])
-
+  application LoanApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 }

@@ -1,76 +1,174 @@
-import {NextResponse} from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-import bcrypt from "bcrypt";
+import { prisma } from "@/lib/prisma";
 
-import {prisma} from "@/lib/prisma";
+import bcrypt from "bcryptjs";
+
+import { registerSchema } from "@/lib/validations/authSchema";
+
+import { sanitizeObject } from "@/lib/security/sanitize";
+
+import { createToken } from "@/lib/auth";
+
+
 
 
 
 export async function POST(
-request:Request
-){
-
-try{
+request: NextRequest
+) {
 
 
-const body =
-await request.json();
+try {
 
 
-
-const existingUser =
-await prisma.user.findUnique({
-
-where:{
-email:body.email
-}
-
-});
+const body = await request.json();
 
 
 
-if(existingUser){
+// SANITIZE INPUT
 
-return NextResponse.json({
+const cleanBody =
+sanitizeObject(body);
 
-message:"User already exists"
+
+
+// VALIDATE INPUT
+
+const validation =
+registerSchema.safeParse(cleanBody);
+
+
+
+
+
+if(!validation.success){
+
+
+return NextResponse.json(
+
+{
+
+success:false,
+
+message:"Validation failed",
+
+errors:
+validation.error.flatten()
 
 },
+
 {
 status:400
 }
 
 );
 
+
 }
 
 
 
+
+
+const {
+
+name,
+
+email,
+
+password
+
+} = validation.data;
+
+
+
+
+
+
+
+// CHECK USER
+
+const existingUser =
+
+await prisma.user.findUnique({
+
+where:{
+email
+}
+
+});
+
+
+
+
+
+
+if(existingUser){
+
+
+return NextResponse.json(
+
+{
+
+success:false,
+
+message:"Email already registered"
+
+},
+
+{
+status:400
+}
+
+);
+
+
+}
+
+
+
+
+
+
+
+// HASH PASSWORD
+
 const hashedPassword =
+
 await bcrypt.hash(
-body.password,
+
+password,
+
 10
+
 );
 
 
 
+
+
+
+
+// CREATE USER
+
 const user =
+
 await prisma.user.create({
 
 data:{
 
 
-name:body.name,
+name,
 
 
-email:body.email,
+email,
 
 
 password:hashedPassword,
 
 
-role:
-body.role || "CUSTOMER"
+role:"CUSTOMER"
 
 
 }
@@ -79,22 +177,112 @@ body.role || "CUSTOMER"
 
 
 
-return NextResponse.json({
+
+
+
+
+// CREATE JWT
+
+const token = createToken({
+
+id:user.id,
+
+email:user.email,
+
+role:user.role
+
+});
+
+
+
+
+
+
+
+
+const response =
+
+NextResponse.json(
+
+{
 
 success:true,
 
-user
+message:"Registration successful",
 
-});
+user:{
+
+
+id:user.id,
+
+name:user.name,
+
+email:user.email,
+
+role:user.role
 
 
 }
 
+}
+
+);
+
+
+
+
+
+
+
+response.cookies.set(
+
+"token",
+
+token,
+
+{
+
+
+httpOnly:true,
+
+secure:
+process.env.NODE_ENV==="production",
+
+sameSite:"strict",
+
+maxAge:
+60 * 60 * 24 * 7,
+
+path:"/"
+
+}
+
+);
+
+
+
+
+
+
+return response;
+
+
+
+}
 
 catch(error){
 
 
-return NextResponse.json({
+console.error(
+"REGISTER ERROR:",
+error
+);
+
+
+
+return NextResponse.json(
+
+{
 
 success:false,
 

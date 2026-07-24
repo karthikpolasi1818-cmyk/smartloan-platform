@@ -1,160 +1,238 @@
 "use client";
 
+import { useState } from "react";
 
-import {
+import toast from "react-hot-toast";
 
-useForm
+import FormButton from "@/components/common/FormButton";
+
+
+
+export default function LoanDetailsForm() {
+
+
+const [loading,setLoading] = useState(false);
+
+
+
+const [formData,setFormData] = useState({
+
+loanType:"",
+
+fullName:"",
+
+email:"",
+
+phone:"",
+
+pan:"",
+
+aadhaar:"",
+
+address:"",
+
+city:"",
+
+state:"",
+
+employmentType:"",
+
+companyName:"",
+
+monthlyIncome:"",
+
+loanAmount:"",
+
+tenure:"",
+
+interestRate:""
+
+
+});
+
+
+
+
+
+function handleChange(
+
+e:React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+
+){
+
+
+setFormData({
+
+...formData,
+
+[e.target.name]:e.target.value
+
+});
+
 
 }
 
-from "react-hook-form";
-
-
-import {
-
-useApplicationStore
-
-}
-
-from "@/store/applicationStore";
 
 
 
 
+async function handleSubmit(
 
-interface LoanFormData {
+e:React.FormEvent
 
-loanType:string;
+){
 
-amount:number;
 
-tenure:number;
-
-}
+e.preventDefault();
 
 
 
+setLoading(true);
 
 
-const loanOptions = {
+
+try{
 
 
-PERSONAL:{
+const response = await fetch(
 
-rate:10.5,
+"/api/customer/application",
 
-maxAmount:500000
+{
+
+method:"POST",
+
+headers:{
+
+"Content-Type":"application/json"
 
 },
 
+body:JSON.stringify({
 
-HOME:{
+...formData,
 
-rate:8.5,
+loanAmount:Number(formData.loanAmount),
 
-maxAmount:5000000
+tenure:Number(formData.tenure),
 
-},
+interestRate:Number(formData.interestRate),
 
+monthlyIncome:
 
-BUSINESS:{
+formData.monthlyIncome
 
-rate:12,
+?
 
-maxAmount:2000000
+Number(formData.monthlyIncome)
 
-}
+:
 
+undefined
 
-};
-
-
-
-
-
-
-
-export default function LoanDetailsForm(){
-
-
-
-const {
-
-setLoanType,
-
-setAmount,
-
-setTenure,
-
-nextStep
+})
 
 }
-
-=
-
-useApplicationStore();
-
-
-
-
-
-const {
-
-register,
-
-handleSubmit
-
-}
-
-=
-
-useForm<LoanFormData>();
-
-
-
-
-
-
-
-function submit(data:LoanFormData){
-
-
-
-const config =
-
-loanOptions[
-data.loanType as keyof typeof loanOptions
-];
-
-
-
-setLoanType(
-
-data.loanType,
-
-config
 
 );
 
 
 
-setAmount(
+const result =
+await response.json();
 
-Number(data.amount)
+
+
+
+if(result.success){
+
+
+toast.success(
+
+"Loan application submitted successfully"
 
 );
 
 
 
-setTenure(
+setFormData({
 
-Number(data.tenure)
+loanType:"",
+
+fullName:"",
+
+email:"",
+
+phone:"",
+
+pan:"",
+
+aadhaar:"",
+
+address:"",
+
+city:"",
+
+state:"",
+
+employmentType:"",
+
+companyName:"",
+
+monthlyIncome:"",
+
+loanAmount:"",
+
+tenure:"",
+
+interestRate:""
+
+});
+
+
+}
+
+else{
+
+
+toast.error(
+
+result.message ||
+
+"Application submission failed"
 
 );
 
 
+}
 
-nextStep();
+
+
+}
+
+catch(error){
+
+
+console.error(error);
+
+
+
+toast.error(
+
+"Something went wrong"
+
+);
+
+
+}
+
+finally{
+
+
+setLoading(false);
+
+
+}
 
 
 
@@ -164,35 +242,29 @@ nextStep();
 
 
 
-
-return(
-
+return (
 
 <form
 
-onSubmit={
-handleSubmit(submit)
-}
+onSubmit={handleSubmit}
 
 className="
 bg-white
-rounded-3xl
-shadow-xl
-p-10
-space-y-6
+rounded-xl
+shadow-lg
+p-6
+space-y-5
 "
 
 >
 
 
-
 <h2 className="
-text-3xl
+text-2xl
 font-bold
-text-blue-900
 ">
 
-Loan Details
+Loan Application
 
 </h2>
 
@@ -202,17 +274,22 @@ Loan Details
 
 <select
 
-className="input"
+name="loanType"
 
-{...register(
-"loanType",
-{
-required:true
-}
-)}
+value={formData.loanType}
+
+onChange={handleChange}
+
+className="
+w-full
+border
+rounded-lg
+p-3
+"
+
+required
 
 >
-
 
 <option value="">
 
@@ -220,22 +297,19 @@ Select Loan Type
 
 </option>
 
-
-<option value="PERSONAL">
+<option value="Personal Loan">
 
 Personal Loan
 
 </option>
 
-
-<option value="HOME">
+<option value="Home Loan">
 
 Home Loan
 
 </option>
 
-
-<option value="BUSINESS">
+<option value="Business Loan">
 
 Business Loan
 
@@ -248,27 +322,125 @@ Business Loan
 
 
 
+<input
+
+name="fullName"
+
+placeholder="Full Name"
+
+value={formData.fullName}
+
+onChange={handleChange}
+
+className="input"
+
+required
+
+/>
+
+
 
 
 
 <input
 
+name="email"
+
+placeholder="Email"
+
+type="email"
+
+value={formData.email}
+
+onChange={handleChange}
+
 className="input"
 
-type="number"
+required
+
+/>
+
+
+
+
+
+<input
+
+name="phone"
+
+placeholder="Phone Number"
+
+value={formData.phone}
+
+onChange={handleChange}
+
+className="input"
+
+required
+
+/>
+
+
+
+
+
+<input
+
+name="pan"
+
+placeholder="PAN Number"
+
+value={formData.pan}
+
+onChange={handleChange}
+
+className="input"
+
+required
+
+/>
+
+
+
+
+
+<input
+
+name="aadhaar"
+
+placeholder="Aadhaar Number"
+
+value={formData.aadhaar}
+
+onChange={handleChange}
+
+className="input"
+
+required
+
+/>
+
+
+
+
+
+<input
+
+name="loanAmount"
 
 placeholder="Loan Amount"
 
-{...register(
-"amount",
-{
-valueAsNumber:true
-}
-)}
+type="number"
+
+value={formData.loanAmount}
+
+onChange={handleChange}
+
+className="input"
+
+required
 
 />
-
-
 
 
 
@@ -276,18 +448,19 @@ valueAsNumber:true
 
 <input
 
-className="input"
+name="tenure"
+
+placeholder="Tenure (Months)"
 
 type="number"
 
-placeholder="Tenure (Years)"
+value={formData.tenure}
 
-{...register(
-"tenure",
-{
-valueAsNumber:true
-}
-)}
+onChange={handleChange}
+
+className="input"
+
+required
 
 />
 
@@ -295,30 +468,124 @@ valueAsNumber:true
 
 
 
+<input
+
+name="interestRate"
+
+placeholder="Interest Rate"
+
+type="number"
+
+value={formData.interestRate}
+
+onChange={handleChange}
+
+className="input"
+
+required
+
+/>
 
 
-<button
+
+
+
+<input
+
+name="employmentType"
+
+placeholder="Employment Type"
+
+value={formData.employmentType}
+
+onChange={handleChange}
+
+className="input"
+
+/>
+
+
+
+
+
+<input
+
+name="companyName"
+
+placeholder="Company Name"
+
+value={formData.companyName}
+
+onChange={handleChange}
+
+className="input"
+
+/>
+
+
+
+
+
+<input
+
+name="monthlyIncome"
+
+placeholder="Monthly Income"
+
+type="number"
+
+value={formData.monthlyIncome}
+
+onChange={handleChange}
+
+className="input"
+
+/>
+
+
+
+
+
+<textarea
+
+name="address"
+
+placeholder="Address"
+
+value={formData.address}
+
+onChange={(e)=>setFormData({
+
+...formData,
+
+address:e.target.value
+
+})}
 
 className="
-bg-blue-600
-text-white
-px-10
-py-4
-rounded-xl
-font-bold
+w-full
+border
+rounded-lg
+p-3
 "
 
->
+/>
 
-Continue
 
-</button>
+
+
+
+<FormButton loading={loading}>
+
+Submit Application
+
+</FormButton>
 
 
 
 </form>
 
+);
 
-)
 
 }

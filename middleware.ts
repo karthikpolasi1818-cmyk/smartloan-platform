@@ -1,82 +1,75 @@
-import {
-NextResponse
-}
-from "next/server";
+import { NextRequest,NextResponse } from "next/server";
 
-
-import type {
-NextRequest
-}
-from "next/server";
-
-
-
-import {
-verifyToken
-}
-from "@/lib/auth/verifyToken";
-
+import { verifyToken } from "@/lib/auth";
 
 
 
 
 export function middleware(
+
 request:NextRequest
+
 ){
 
 
+
 const token =
+
 request.cookies.get("token")?.value;
 
 
 
-const role =
-request.cookies.get("role")?.value;
-
-
-
 const path =
+
 request.nextUrl.pathname;
 
 
 
 
 
-
-// Admin protection
-
 if(
-path.startsWith("/admin")
+
+path.startsWith("/dashboard")
+
+||
+
+path.startsWith("/apply")
+
 ){
 
 
 if(!token){
 
+
 return NextResponse.redirect(
 
-new URL("/login",request.url)
+new URL(
+"/login",
+request.url
+)
 
 );
+
 
 }
 
 
 
+const user =
 
-const user:any =
 verifyToken(token);
 
 
 
-if(
-!user ||
-user.role !== "ADMIN"
+if(!user){
 
-){
 
 return NextResponse.redirect(
 
-new URL("/login",request.url)
+new URL(
+"/login",
+request.url
+)
 
 );
 
@@ -90,17 +83,9 @@ new URL("/login",request.url)
 
 
 
-
-
-// Customer protection
-
 if(
 
-path.startsWith("/apply")
-
-||
-
-path.startsWith("/dashboard")
+path.startsWith("/admin")
 
 ){
 
@@ -111,7 +96,53 @@ if(!token){
 
 return NextResponse.redirect(
 
-new URL("/login",request.url)
+new URL(
+"/login",
+request.url
+)
+
+);
+
+
+}
+
+
+
+
+const user =
+
+verifyToken(token);
+
+
+
+
+
+if(
+
+!user
+
+||
+
+(
+
+user.role !== "ADMIN"
+
+&&
+
+user.role !== "LOAN_MANAGER"
+
+)
+
+){
+
+
+
+return NextResponse.redirect(
+
+new URL(
+"/dashboard",
+request.url
+)
 
 );
 
@@ -121,7 +152,6 @@ new URL("/login",request.url)
 
 
 }
-
 
 
 
@@ -137,17 +167,16 @@ return NextResponse.next();
 
 
 
-
 export const config = {
 
 
 matcher:[
 
-"/admin/:path*",
+"/dashboard/:path*",
 
 "/apply/:path*",
 
-"/dashboard/:path*"
+"/admin/:path*"
 
 ]
 

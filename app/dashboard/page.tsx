@@ -1,52 +1,68 @@
 "use client";
 
 
-import {
-useEffect,
-useState
-} from "react";
+import { useEffect,useState } from "react";
+
+import { useRouter } from "next/navigation";
 
 
-import {
-useRouter
-} from "next/navigation";
+import ProfileCard 
+from "@/components/customer/ProfileCard";
 
 
+import LoanStatusCard 
+from "@/components/customer/LoanStatusCard";
 
 
-export default function Dashboard(){
+import ApplicationProgress 
+from "@/components/customer/ApplicationProgress";
 
 
-const router = useRouter();
-
-
-const [application,setApplication] =
-useState<any>(null);
+import LogoutButton 
+from "@/components/auth/LogoutButton";
 
 
 
-const [loading,setLoading] =
-useState(true);
+import { motion } from "framer-motion";
 
 
 
 
-
-useEffect(()=>{
-
-
-const email =
-document.cookie
-.split("; ")
-.find(
-(row)=>row.startsWith("email=")
-)
-?.split("=")[1];
+export default function DashboardPage(){
 
 
 
+const [user,setUser]=useState<any>(null);
 
-if(!email){
+const [application,setApplication]=useState<any>(null);
+
+const [loading,setLoading]=useState(true);
+
+
+
+const router=useRouter();
+
+
+
+
+
+async function loadDashboard(){
+
+
+try{
+
+
+const userResponse =
+await fetch("/api/auth/me");
+
+
+const userData =
+await userResponse.json();
+
+
+
+
+if(!userData.success){
 
 router.push("/login");
 
@@ -57,38 +73,63 @@ return;
 
 
 
-
-fetch(
-
-"/api/customer/application",
-
-{
-
-headers:{
-
-email:email
-
-}
-
-}
-
-)
-
-.then(res=>res.json())
-
-.then(data=>{
+setUser(userData.user);
 
 
-setApplication(
-data.data
+
+
+
+const applicationResponse =
+
+await fetch(
+"/api/customer/current"
 );
 
 
+
+const applicationData =
+
+await applicationResponse.json();
+
+
+
+
+if(applicationData.success){
+
+setApplication(
+applicationData.application
+);
+
+}
+
+
+
+}
+
+catch(error){
+
+console.error(error);
+
+}
+
+finally{
+
 setLoading(false);
 
+}
 
-});
 
+}
+
+
+
+
+
+
+useEffect(()=>{
+
+
+loadDashboard();
 
 
 },[]);
@@ -99,40 +140,17 @@ setLoading(false);
 
 
 
-
-function logout(){
-
-
-document.cookie =
-"token=; path=/; max-age=0";
-
-
-document.cookie =
-"role=; path=/; max-age=0";
-
-
-document.cookie =
-"email=; path=/; max-age=0";
-
-
-
-router.push("/login");
-
-
-}
-
-
-
-
-
-
-
 if(loading){
 
 
-return(
+return (
 
-<div className="loan-card">
+<div className="
+min-h-screen
+flex
+items-center
+justify-center
+">
 
 Loading Dashboard...
 
@@ -148,355 +166,113 @@ Loading Dashboard...
 
 
 
-return(
+return (
 
-
-<main
-
-className="
-
+<main className="
 min-h-screen
-
-bg-gradient-to-br
-
-from-blue-50
-
-via-white
-
-to-indigo-100
-
-p-10
-
-"
-
->
+bg-gray-100
+p-6
+md:p-10
+">
 
 
-<div className="max-w-5xl mx-auto">
+<div className="
+max-w-6xl
+mx-auto
+">
 
 
+<div className="
+flex
+justify-between
+items-center
+mb-8
+">
 
-<div className="flex justify-between mb-8">
 
+<h1 className="
+text-4xl
+font-bold
+">
 
-<h1 className="text-4xl font-bold text-blue-900">
-
-SmartLoan Customer Dashboard
+SmartLoan Dashboard
 
 </h1>
 
 
 
-<button
+<LogoutButton />
 
-className="primary-btn"
 
-onClick={logout}
+</div>
+
+
+
+
+
+
+
+<motion.div
+
+initial={{
+opacity:0,
+y:20
+}}
+
+animate={{
+opacity:1,
+y:0
+}}
+
+transition={{
+duration:0.5
+}}
+
+className="
+grid
+md:grid-cols-2
+gap-6
+"
 
 >
 
-Logout
 
-</button>
+<ProfileCard
 
+user={user}
 
-</div>
+/>
 
 
+<LoanStatusCard
 
+application={application}
 
+/>
 
-{
 
-!application ?
+</motion.div>
 
 
 
-<div className="loan-card">
 
 
-<h2 className="section-title">
 
-No Application Found
 
-</h2>
+<div className="mt-8">
 
 
-<p>
+<ApplicationProgress
 
-You have not submitted any loan application.
-
-</p>
-
-
-<button
-
-className="primary-btn"
-
-onClick={()=>router.push("/apply")}
-
->
-
-Apply Loan
-
-</button>
-
-
-
-</div>
-
-
-
-
-
-:
-
-
-
-<div className="loan-card">
-
-
-<h2 className="section-title">
-
-Loan Application Tracking
-
-</h2>
-
-
-
-
-
-
-<div className="space-y-4">
-
-
-
-<p>
-
-Application ID:
-
-<strong>
-
-{" "}
-
-{application.applicationId}
-
-</strong>
-
-</p>
-
-
-
-
-
-<p>
-
-Loan Type:
-
-<strong>
-
-{" "}
-
-{application.loanType}
-
-</strong>
-
-</p>
-
-
-
-
-
-<p>
-
-Loan Amount:
-
-<strong>
-
-{" "}
-
-₹{application.loanAmount.toLocaleString("en-IN")}
-
-</strong>
-
-</p>
-
-
-
-
-
-<p>
-
-Current Status:
-
-<strong>
-
-{" "}
-
-{application.status}
-
-</strong>
-
-</p>
-
-
-
-</div>
-
-
-
-
-
-
-
-<hr className="my-6"/>
-
-
-
-
-
-<h3 className="text-xl font-bold">
-
-Application Timeline
-
-</h3>
-
-
-
-
-
-<div className="mt-5 space-y-4">
-
-
-
-<div>
-
-✅ Application Submitted
-
-</div>
-
-
-
-
-<div>
-
-{
-
-application.verified
-
-?
-
-"✅ Identity Verification Completed"
-
-:
-
-"⏳ Verification Pending"
-
+status={
+application?.approvalStatus || "PENDING"
 }
 
-</div>
-
-
-
-
-
-
-<div>
-
-{
-
-application.approvalStatus==="APPROVED"
-
-?
-
-"✅ Loan Approved"
-
-:
-
-"⏳ Awaiting Approval"
-
-}
-
-</div>
-
-
-
-
+/>
 
 
 </div>
 
-
-
-
-
-
-
-
-{
-
-application.creditScore &&
-
-
-<div className="success-box mt-6">
-
-
-Credit Score:
-
-{" "}
-
-<b>
-
-{application.creditScore}
-
-</b>
-
-
-</div>
-
-
-}
-
-
-
-
-
-
-
-{
-
-application.adminRemark &&
-
-
-<div className="loan-card mt-5">
-
-
-<h3>
-
-Admin Remark
-
-</h3>
-
-
-<p>
-
-{application.adminRemark}
-
-</p>
-
-
-</div>
-
-
-}
-
-
-
-
-</div>
-
-
-}
 
 
 
@@ -506,7 +282,6 @@ Admin Remark
 
 
 </main>
-
 
 );
 
